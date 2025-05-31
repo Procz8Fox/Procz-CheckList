@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procz Checklist</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: all 0.3s ease;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Sky Theme (Default) */
+        .theme-sky {
+            background: linear-gradient(135deg, #87CEEB 0%, #98D4EA 25%, #B8E6F0 50%, #D1F2FF 75%, #E6F9FF 100%);
+            color: #2c3e50;
+        }
+
+        .theme-sky::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="white" opacity="0.3"><animate attributeName="opacity" values="0.3;0.8;0.3" dur="3s" repeatCount="indefinite"/></circle><circle cx="80" cy="30" r="1.5" fill="white" opacity="0.4"><animate attributeName="opacity" values="0.4;0.9;0.4" dur="4s" repeatCount="indefinite"/></circle><circle cx="60" cy="70" r="1" fill="white" opacity="0.5"><animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/></circle></svg>') repeat;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Forest Theme */
+        .theme-forest {
+            background: linear-gradient(135deg, #2d5016 0%, #3a6b1c 25%, #4a7c25 50%, #5a8c2f 75%, #6fa033 100%);
+            color: #e8f5e8;
+        }
+
+        .theme-forest::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><polygon points="10,90 15,70 20,90" fill="green" opacity="0.2"/><polygon points="30,85 35,65 40,85" fill="green" opacity="0.3"/><polygon points="70,80 75,60 80,80" fill="green" opacity="0.25"/></svg>') repeat;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Night Theme */
+        .theme-night {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #1f2937 75%, #374151 100%);
+            color: #f3f4f6;
+        }
+
+        .theme-night::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="0.5" fill="white" opacity="0.8"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle><circle cx="80" cy="30" r="0.3" fill="white" opacity="0.6"><animate attributeName="opacity" values="0.2;0.9;0.2" dur="3s" repeatCount="indefinite"/></circle><circle cx="60" cy="70" r="0.4" fill="white" opacity="0.7"><animate attributeName="opacity" values="0.4;1;0.4" dur="2.5s" repeatCount="indefinite"/></circle><circle cx="40" cy="80" r="0.2" fill="white" opacity="0.5"><animate attributeName="opacity" values="0.3;0.8;0.3" dur="4s" repeatCount="indefinite"/></circle></svg>') repeat;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.8;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .theme-selector {
+            display: flex;
+            gap: 10px;
+        }
+
+        .theme-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.2);
+            color: inherit;
+        }
+
+        .theme-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-btn.active {
+            background: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .file-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .file-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.2);
+            color: inherit;
+        }
+
+        .file-btn:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .checklist-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .add-item {
+            display: flex;
+            margin-bottom: 25px;
+            gap: 10px;
+        }
+
+        .add-input {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            color: inherit;
+            font-size: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .add-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .add-btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.3);
+            color: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .checklist-item:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .checklist-item.completed {
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            background: transparent;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox:checked {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .item-text {
+            flex: 1;
+            font-size: 16px;
+        }
+
+        .delete-btn {
+            background: rgba(255, 0, 0, 0.3);
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: rgba(255, 0, 0, 0.5);
+            transform: scale(1.1);
+        }
+
+        .stats {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .theme-selector, .file-controls {
+                justify-content: center;
+            }
+
+            .add-item {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body class="theme-sky">
+    <div class="container">
+        <div class="header">
+            <div class="logo">Procz Checklist</div>
+            <div class="subtitle">Your Premium Task Manager</div>
+        </div>
+
+        <div class="controls">
+            <div class="theme-selector">
+                <button class="theme-btn active" data-theme="sky">☁️ Sky</button>
+                <button class="theme-btn" data-theme="forest">🌲 Forest</button>
+                <button class="theme-btn" data-theme="night">🌙 Night</button>
+            </div>
+            <div class="file-controls">
+                <input type="file" id="importFile" accept=".fox" class="hidden">
+                <button class="file-btn" onclick="importList()">📁 Import .fox</button>
+                <button class="file-btn" onclick="exportList()">💾 Export .fox</button>
+            </div>
+        </div>
+
+        <div class="checklist-container">
+            <div class="add-item">
+                <input type="text" class="add-input" id="newItemInput" placeholder="Add a new task...">
+                <button class="add-btn" onclick="addItem()">➕ Add</button>
+            </div>
+            
+            <div id="checklistItems"></div>
+            
+            <div class="stats" id="stats">
+                0 tasks • 0 completed
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let checklist = [];
+        let currentTheme = 'sky';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFromStorage();
+            updateDisplay();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Theme buttons
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.addEventListener('click', () => switchTheme(btn.dataset.theme));
+            });
+
+            // Enter key for adding items
+            document.getElementById('newItemInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addItem();
+            });
+
+            // File import
+            document.getElementById('importFile').addEventListener('change', handleFileImport);
+        }
+
+        function switchTheme(theme) {
+            currentTheme = theme;
+            document.body.className = `theme-${theme}`;
+            
+            // Update active button
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.theme === theme);
+            });
+            
+            saveToStorage();
+        }
+
+        function addItem() {
+            const input = document.getElementById('newItemInput');
+            const text = input.value.trim();
+            
+            if (text) {
+                checklist.push({
+                    id: Date.now(),
+                    text: text,
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                });
+                
+                input.value = '';
+                updateDisplay();
+                saveToStorage();
+            }
+        }
+
+        function toggleItem(id) {
+            const item = checklist.find(item => item.id === id);
+            if (item) {
+                item.completed = !item.completed;
+                updateDisplay();
+                saveToStorage();
+            }
+        }
+
+        function deleteItem(id) {
+            checklist = checklist.filter(item => item.id !== id);
+            updateDisplay();
+            saveToStorage();
+        }
+
+        function updateDisplay() {
+            const container = document.getElementById('checklistItems');
+            const stats = document.getElementById('stats');
+            
+            container.innerHTML = '';
+            
+            checklist.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `checklist-item ${item.completed ? 'completed' : ''}`;
+                itemDiv.innerHTML = `
+                    <input type="checkbox" class="checkbox" ${item.completed ? 'checked' : ''} 
+                           onchange="toggleItem(${item.id})">
+                    <span class="item-text">${item.text}</span>
+                    <button class="delete-btn" onclick="deleteItem(${item.id})">×</button>
+                `;
+                container.appendChild(itemDiv);
+            });
+
+            // Update stats
+            const completed = checklist.filter(item => item.completed).length;
+            const total = checklist.length;
+            stats.textContent = `${total} tasks • ${completed} completed`;
+        }
+
+        function exportList() {
+            const data = {
+                version: "1.0",
+                theme: currentTheme,
+                checklist: checklist,
+                exportedAt: new Date().toISOString(),
+                exportedBy: "Procz Checklist"
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `procz-checklist-${new Date().toISOString().split('T')[0]}.fox`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importList() {
+            document.getElementById('importFile').click();
+        }
+
+        function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!file.name.endsWith('.fox')) {
+                alert('Please select a .fox file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.checklist && Array.isArray(data.checklist)) {
+                        checklist = data.checklist;
+                        if (data.theme) {
+                            switchTheme(data.theme);
+                        }
+                        updateDisplay();
+                        saveToStorage();
+                        alert('Checklist imported successfully!');
+                    } else {
+                        alert('Invalid .fox file format');
+                    }
+                } catch (error) {
+                    alert('Error reading .fox file');
+                }
+            };
+            reader.readAsText(file);
+            
+            // Reset file input
+            event.target.value = '';
+        }
+
+        function saveToStorage() {
+            const data = {
+                checklist: checklist,
+                theme: currentTheme
+            };
+            // Note: Using a simple variable to store data since localStorage is not available
+            window.proczData = data;
+        }
+
+        function loadFromStorage() {
+            // Note: Loading from a simple variable since localStorage is not available
+            if (window.proczData) {
+                checklist = window.proczData.checklist || [];
+                currentTheme = window.proczData.theme || 'sky';
+                switchTheme(currentTheme);
+            }
+        }
+    </script>
+</body>
+</html>
