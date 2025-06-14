@@ -3,8 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Allow full‑screen standalone mode on mobile -->
-    <meta name="mobile-web-app-capable" content="yes">
     <title>Procz Checklist</title>
     <style>
         * {
@@ -264,4 +262,242 @@
         }
 
         .delete-btn:hover {
-            background: rgba(255
+            background: rgba(255, 0, 0, 0.5);
+            transform: scale(1.1);
+        }
+
+        .stats {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .theme-selector, .file-controls {
+                justify-content: center;
+            }
+
+            .add-item {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body class="theme-sky">
+    <div class="container">
+        <div class="header">
+            <div class="logo">Procz Checklist</div>
+            <div class="subtitle">Your Number 1 Task Manager</div>
+        </div>
+
+        <div class="controls">
+            <div class="theme-selector">
+                <button class="theme-btn active" data-theme="sky">☁️ Sky</button>
+                <button class="theme-btn" data-theme="forest">🌲 Forest</button>
+                <button class="theme-btn" data-theme="night">🌙 Night</button>
+            </div>
+            <div class="file-controls">
+                <input type="file" id="importFile" accept=".fox" class="hidden">
+                <button class="file-btn" onclick="importList()">📁 Import .fox</button>
+                <button class="file-btn" onclick="exportList()">💾 Export .fox</button>
+            </div>
+        </div>
+
+        <div class="checklist-container">
+            <div class="add-item">
+                <input type="text" class="add-input" id="newItemInput" placeholder="Add a new task...">
+                <button class="add-btn" onclick="addItem()">➕ Add</button>
+            </div>
+            
+            <div id="checklistItems"></div>
+            
+            <div class="stats" id="stats">
+                0 tasks • 0 completed
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let checklist = [];
+        let currentTheme = 'sky';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFromStorage();
+            updateDisplay();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Theme buttons
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.addEventListener('click', () => switchTheme(btn.dataset.theme));
+            });
+
+            // Enter key for adding items
+            document.getElementById('newItemInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addItem();
+            });
+
+            // File import
+            document.getElementById('importFile').addEventListener('change', handleFileImport);
+        }
+
+        function switchTheme(theme) {
+            currentTheme = theme;
+            document.body.className = theme-${theme};
+            
+            // Update active button
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.theme === theme);
+            });
+            
+            saveToStorage();
+        }
+
+        function addItem() {
+            const input = document.getElementById('newItemInput');
+            const text = input.value.trim();
+            
+            if (text) {
+                checklist.push({
+                    id: Date.now(),
+                    text: text,
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                });
+                
+                input.value = '';
+                updateDisplay();
+                saveToStorage();
+            }
+        }
+
+        function toggleItem(id) {
+            const item = checklist.find(item => item.id === id);
+            if (item) {
+                item.completed = !item.completed;
+                updateDisplay();
+                saveToStorage();
+            }
+        }
+
+        function deleteItem(id) {
+            checklist = checklist.filter(item => item.id !== id);
+            updateDisplay();
+            saveToStorage();
+        }
+
+        function updateDisplay() {
+            const container = document.getElementById('checklistItems');
+            const stats = document.getElementById('stats');
+            
+            container.innerHTML = '';
+            
+            checklist.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = checklist-item ${item.completed ? 'completed' : ''};
+                itemDiv.innerHTML = 
+                    <input type="checkbox" class="checkbox" ${item.completed ? 'checked' : ''} 
+                           onchange="toggleItem(${item.id})">
+                    <span class="item-text">${item.text}</span>
+                    <button class="delete-btn" onclick="deleteItem(${item.id})">×</button>
+                ;
+                container.appendChild(itemDiv);
+            });
+
+            // Update stats
+            const completed = checklist.filter(item => item.completed).length;
+            const total = checklist.length;
+            stats.textContent = ${total} tasks • ${completed} completed;
+        }
+
+        function exportList() {
+            const data = {
+                version: "1.0",
+                theme: currentTheme,
+                checklist: checklist,
+                exportedAt: new Date().toISOString(),
+                exportedBy: "Procz Checklist"
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = procz-checklist-${new Date().toISOString().split('T')[0]}.fox;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importList() {
+            document.getElementById('importFile').click();
+        }
+
+        function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!file.name.endsWith('.fox')) {
+                alert('Please select a .fox file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.checklist && Array.isArray(data.checklist)) {
+                        checklist = data.checklist;
+                        if (data.theme) {
+                            switchTheme(data.theme);
+                        }
+                        updateDisplay();
+                        saveToStorage();
+                        alert('Checklist imported successfully!');
+                    } else {
+                        alert('Invalid .fox file format');
+                    }
+                } catch (error) {
+                    alert('Error reading .fox file');
+                }
+            };
+            reader.readAsText(file);
+            
+            // Reset file input
+            event.target.value = '';
+        }
+
+        function saveToStorage() {
+            const data = {
+                checklist: checklist,
+                theme: currentTheme
+            };
+            // Note: Using a simple variable to store data since localStorage is not available
+            window.proczData = data;
+        }
+
+        function loadFromStorage() {
+            // Note: Loading from a simple variable since localStorage is not available
+            if (window.proczData) {
+                checklist = window.proczData.checklist || [];
+                currentTheme = window.proczData.theme || 'sky';
+                switchTheme(currentTheme);
+            }
+        }
+    </script>
+</body>
+</html>
